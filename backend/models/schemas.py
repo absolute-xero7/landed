@@ -90,3 +90,17 @@ class ImmigrationProfile(BaseModel):
     all_deadlines: list[Deadline]
     required_actions: list[RequiredAction]
     risks: list[str]
+
+
+class ChatTranslationMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatTranslationRequest(BaseModel):
+    messages: list[ChatTranslationMessage]
+    language: str = "English"
+
+
+class ChatTranslationResponse(BaseModel):
+    messages: list[str]

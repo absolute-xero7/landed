@@ -14,8 +14,9 @@ from sse_starlette.sse import EventSourceResponse
 
 from agents.qa_agent import answer_question
 from flows.landed_flow import KNOWLEDGE_BASE, run_session_pipeline
-from models.schemas import UploadArtifact
+from models.schemas import ChatTranslationRequest, UploadArtifact
 from shared.profile_normalizer import normalize_profile
+from shared.translator import translate_text
 from shared.session_enrichment import build_session_enrichment, compute_session_diff, snapshot_session_state
 from shared.translator import translate_profile
 
@@ -216,6 +217,24 @@ async def qa(session_id: str = Form(...), question: str = Form(...), language: s
         state.get("document_completeness"),
     )
     return {"answer": answer}
+
+
+@app.post("/api/chat/translate")
+async def translate_chat(request: ChatTranslationRequest):
+    """Translate an existing chat transcript without reloading the session."""
+
+    def translate_messages() -> list[str]:
+        translated: list[str] = []
+        for message in request.messages:
+            content = (message.content or "").strip()
+            if not content:
+                translated.append("")
+                continue
+            translated.append(translate_text(content, request.language))
+        return translated
+
+    translated_messages = await asyncio.to_thread(translate_messages)
+    return {"messages": translated_messages}
 
 
 @app.get("/api/demo/{filename}")

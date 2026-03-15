@@ -1,4 +1,6 @@
 import {
+  ChatMessage,
+  ChatTranslationResponse,
   QAResponse,
   SessionResponse,
   StreamEvent,
@@ -132,4 +134,22 @@ export async function askQuestion(sessionId: string, question: string, language:
     body: payload,
   });
   return parseJson<QAResponse>(response);
+}
+
+export async function translateChatHistory(messages: ChatMessage[], language: string): Promise<string[]> {
+  const response = await fetch(`/api/chat/translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      language,
+      messages: messages.map((message) => ({
+        role: message.role,
+        content: message.source_content ?? message.content,
+      })),
+    }),
+  });
+  const payload = await parseJson<ChatTranslationResponse>(response);
+  return payload.messages;
 }

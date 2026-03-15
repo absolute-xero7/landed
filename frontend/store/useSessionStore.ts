@@ -13,6 +13,7 @@ interface SessionStore {
   setProfile: (profile: ImmigrationProfile | null) => void;
   setDocuments: (docs: ExtractedDocument[]) => void;
   setLanguage: (language: string) => void;
+  setChatHistory: (messages: ChatMessage[]) => void;
   addMessage: (message: ChatMessage) => void;
   resetChat: () => void;
 }
@@ -28,6 +29,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
   setProfile: (profile) => set({ profile }),
   setDocuments: (docs) => set({ documents: docs }),
   setLanguage: (language) => set({ language }),
+  setChatHistory: (messages) => set({ chatHistory: messages }),
   addMessage: (message) => set((state) => ({ chatHistory: [...state.chatHistory, message] })),
   resetChat: () => set({ chatHistory: [] }),
 }));

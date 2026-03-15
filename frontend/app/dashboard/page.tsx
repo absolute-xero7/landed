@@ -42,7 +42,7 @@ function DashboardContent() {
     setLoading(true);
     setError(null);
 
-    getSession(sessionId, language)
+    getSession(sessionId)
       .then((response) => {
         setData(response);
         setSession(sessionId);
@@ -53,7 +53,7 @@ function DashboardContent() {
         setError(err instanceof Error ? err.message : "Failed to load session.");
       })
       .finally(() => setLoading(false));
-  }, [language, refreshKey, sessionId, setDocumentsStore, setProfileStore, setSession]);
+  }, [refreshKey, sessionId, setDocumentsStore, setProfileStore, setSession]);
 
   const profile: ImmigrationProfile | null = data?.profile ?? null;
   const documents = data?.documents ?? [];
@@ -87,6 +87,7 @@ function DashboardContent() {
       <header className="mb-3 flex items-center justify-between rounded-xl border border-border bg-bg-surface px-4 py-3">
         <div>
           <h1 className="font-heading text-3xl text-canada-red">Landed</h1>
+          <p className="text-sm text-text-secondary">Canadian immigration assistant</p>
           <p className="font-mono text-xs text-text-secondary">Session {sessionId}</p>
         </div>
         <SessionUploadPanel

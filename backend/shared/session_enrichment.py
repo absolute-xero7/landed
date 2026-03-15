@@ -388,15 +388,88 @@ def _infer_deadline_source(deadline: dict, documents: list[dict]) -> str:
     return "uploaded documents"
 
 
+def _active_status_document(documents: list[dict]) -> dict | None:
+    candidates: list[tuple[date, dict]] = []
+    for document in documents:
+        if document.get("document_type") not in {"study_permit", "work_permit"}:
+            continue
+        expiry_date = document.get("expiry_date")
+        if not isinstance(expiry_date, str):
+            continue
+        try:
+            parsed = date.fromisoformat(expiry_date)
+        except ValueError:
+            continue
+        if parsed >= date.today():
+            candidates.append((parsed, document))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return candidates[0][1]
+
+
+def _normalize_deadline_action(action: object) -> str:
+    if not isinstance(action, str):
+        return ""
+    lowered = action.strip().lower()
+    replacements = {
+        "review study permit before expiry": "Renew study permit before expiry",
+        "review work permit before expiry": "Renew work permit before expiry",
+        "study permit expires": "Renew study permit before expiry",
+        "work permit expires": "Renew work permit before expiry",
+    }
+    return replacements.get(lowered, action.strip())
+
+
+def _deadline_is_superseded(deadline: dict, documents: list[dict], active_document: dict | None) -> bool:
+    if not active_document:
+        return False
+
+    action = str(deadline.get("action") or "").strip().lower()
+    source_document = str(deadline.get("source_document") or "")
+    if not source_document or source_document == active_document.get("filename"):
+        return False
+
+    try:
+        deadline_date = date.fromisoformat(str(deadline.get("date") or ""))
+        active_expiry = date.fromisoformat(str(active_document.get("expiry_date") or ""))
+    except ValueError:
+        return False
+
+    if deadline_date >= active_expiry:
+        return False
+
+    source_doc = next((document for document in documents if document.get("filename") == source_document), None)
+    source_type = source_doc.get("document_type") if isinstance(source_doc, dict) else None
+    if source_type not in {"study_permit", "work_permit"}:
+        return False
+
+    if "leave canada" in action:
+        return True
+
+    return action in {
+        "review study permit before expiry",
+        "review work permit before expiry",
+        "renew study permit before expiry",
+        "renew work permit before expiry",
+        "study permit expires",
+        "work permit expires",
+    }
+
+
 def enrich_profile(profile: dict | None, documents: list[dict], knowledge_base: dict) -> dict | None:
     if not isinstance(profile, dict):
         return profile
 
     enriched = deepcopy(profile)
+    active_document = _active_status_document(documents)
     deadlines = []
     for deadline in enriched.get("all_deadlines", []):
         item = deepcopy(deadline)
         item["source_document"] = _infer_deadline_source(item, documents)
+        item["action"] = _normalize_deadline_action(item.get("action"))
+        if _deadline_is_superseded(item, documents, active_document):
+            continue
         deadline_type = detect_deadline_type(item, enriched)
         if item.get("date"):
             item.update(calculate_apply_by(item["date"], deadline_type, knowledge_base))
@@ -409,9 +482,12 @@ def enrich_profile(profile: dict | None, documents: list[dict], knowledge_base: 
     actions = []
     for action in enriched.get("required_actions", []):
         item = deepcopy(action)
+        title = str(item.get("title") or "").strip()
+        if title:
+            item["title"] = _normalize_deadline_action(title)
         normalized_type = normalize_permit_type(str(enriched.get("permit_type") or ""))
         title = str(item.get("title") or "").lower()
-        if "trv" in title:
+        if "trv" in title or "temporary resident visa" in title or "visitor visa" in title:
             normalized_type = "trv"
         elif "pgwp" in title:
             normalized_type = "pgwp"

@@ -252,6 +252,39 @@ def test_session_append_upload_reprocesses_same_session():
     assert session_payload["document_completeness"]["uploaded_count"] == 2
 
 
+def test_chat_translation_endpoint_translates_existing_messages():
+    client, main = _make_client()
+
+    translated_calls: list[tuple[str, str]] = []
+
+    def fake_translate_text(text: str, language: str) -> str:
+        translated_calls.append((text, language))
+        return f"{language}:{text}"
+
+    main.translate_text = fake_translate_text
+
+    response = client.post(
+        "/api/chat/translate",
+        json={
+            "language": "Hindi",
+            "messages": [
+                {"role": "user", "content": "Can I work?"},
+                {"role": "assistant", "content": "You may work up to 24 hours per week."},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["messages"] == [
+        "Hindi:Can I work?",
+        "Hindi:You may work up to 24 hours per week.",
+    ]
+    assert translated_calls == [
+        ("Can I work?", "Hindi"),
+        ("You may work up to 24 hours per week.", "Hindi"),
+    ]
+
+
 def test_session_response_normalizes_string_steps():
     client, main = _make_client()
 
@@ -489,6 +522,224 @@ def test_work_authorization_ignores_sector_restriction_and_detects_breaks():
     assert payload["on_campus"] is True
     assert "not authorized to work" not in payload["plain_english"].lower()
     assert any("24 hours per week" in item for item in payload["key_points"])
+
+
+def test_session_enrichment_filters_superseded_work_permit_deadline_and_renames_review():
+    from shared.session_enrichment import build_session_enrichment
+
+    knowledge_base = json.loads((BACKEND_DIR / "knowledge" / "ircc_knowledge_base.json").read_text())
+    documents = [
+        {
+            "document_id": "doc-work",
+            "filename": "Work Permit.pdf",
+            "document_type": "work_permit",
+            "issuing_authority": "IRCC",
+            "person_name": "Prahlad Ranjit",
+            "dob": None,
+            "nationality": None,
+            "visa_type": None,
+            "permit_type": "work permit",
+            "employer": None,
+            "occupation": None,
+            "issue_date": "2023-03-14",
+            "expiry_date": "2025-09-30",
+            "conditions": [],
+            "restrictions": ["MUST LEAVE CANADA BY 2025/09/30"],
+            "reference_numbers": {},
+            "deadlines": [
+                {
+                    "action": "Leave Canada",
+                    "date": "2025-09-30",
+                    "urgency": "urgent",
+                    "days_remaining": -1,
+                    "source_document": "Work Permit.pdf",
+                }
+            ],
+            "raw_important_text": [],
+            "extraction_method": "test",
+            "document_confidence": "high",
+            "field_evidence": {
+                "expiry_date": {"confidence": "high", "source": "test", "value": "2025-09-30", "excerpt": "Expiry"},
+                "document_type": {"confidence": "high", "source": "test", "value": "work_permit", "excerpt": "Work permit"},
+            },
+            "raw_text": "",
+        },
+        {
+            "document_id": "doc-study",
+            "filename": "Study Permit.pdf",
+            "document_type": "study_permit",
+            "issuing_authority": "IRCC",
+            "person_name": "Prahlad Ranjit",
+            "dob": None,
+            "nationality": None,
+            "visa_type": None,
+            "permit_type": "study permit",
+            "employer": None,
+            "occupation": None,
+            "issue_date": "2025-03-06",
+            "expiry_date": "2026-09-30",
+            "conditions": [],
+            "restrictions": [],
+            "reference_numbers": {},
+            "deadlines": [
+                {
+                    "action": "Review study permit before expiry",
+                    "date": "2026-09-30",
+                    "urgency": "future",
+                    "days_remaining": 199,
+                    "source_document": "Study Permit.pdf",
+                }
+            ],
+            "raw_important_text": [],
+            "extraction_method": "test",
+            "document_confidence": "high",
+            "field_evidence": {
+                "expiry_date": {"confidence": "high", "source": "test", "value": "2026-09-30", "excerpt": "Expiry"},
+                "document_type": {"confidence": "high", "source": "test", "value": "study_permit", "excerpt": "Study permit"},
+            },
+            "raw_text": "",
+        },
+    ]
+    profile = {
+        "current_status": "Prahlad Ranjit's uploaded study permit shows an expiry date of 2026-09-30.",
+        "permit_type": "study permit",
+        "authorized_activities": [],
+        "expiry_date": "2026-09-30",
+        "days_until_expiry": 199,
+        "urgency_level": "normal",
+        "all_deadlines": [
+            {
+                "action": "Leave Canada",
+                "date": "2025-09-30",
+                "urgency": "urgent",
+                "days_remaining": -1,
+                "source_document": "Work Permit.pdf",
+            },
+            {
+                "action": "Review study permit before expiry",
+                "date": "2026-09-30",
+                "urgency": "future",
+                "days_remaining": 199,
+                "source_document": "Study Permit.pdf",
+            },
+        ],
+        "required_actions": [
+            {
+                "action_id": "deadline_follow_up",
+                "title": "Review study permit before expiry",
+                "urgency": "future",
+                "deadline": "2026-09-30",
+                "steps": [],
+            }
+        ],
+        "risks": [],
+    }
+
+    enriched = build_session_enrichment(documents, profile, knowledge_base)
+
+    assert len(enriched["profile"]["all_deadlines"]) == 1
+    assert enriched["profile"]["all_deadlines"][0]["action"] == "Renew study permit before expiry"
+    assert enriched["profile"]["required_actions"][0]["title"] == "Renew study permit before expiry"
+
+
+def test_expired_trv_pdf_extracts_expiry_and_name():
+    import agents.document_parser as document_parser
+
+    trv_path = _demo_file("TRV (expired).pdf")
+    document = document_parser.parse_document(trv_path.read_bytes(), "application/pdf", trv_path.name)
+
+    assert document["document_type"] == "trv"
+    assert document["person_name"] == "Prahlad Ranjit"
+    assert document["expiry_date"] == "2025-09-03"
+    assert document["issue_date"] is None
+
+
+def test_profile_fallback_warns_when_trv_is_expired_but_permit_remains_valid():
+    from shared.fallbacks import build_profile_fallback
+
+    documents = [
+        {
+            "filename": "Study Permit.pdf",
+            "document_type": "study_permit",
+            "person_name": "Prahlad Ranjit",
+            "permit_type": "study permit",
+            "expiry_date": "2026-09-30",
+            "conditions": [],
+            "field_evidence": {
+                "document_type": {"confidence": "high"},
+                "person_name": {"confidence": "high"},
+                "expiry_date": {"confidence": "high"},
+            },
+            "deadlines": [
+                {
+                    "action": "Renew study permit before expiry",
+                    "date": "2026-09-30",
+                    "urgency": "future",
+                    "days_remaining": 199,
+                    "source_document": "Study Permit.pdf",
+                }
+            ],
+        },
+        {
+            "filename": "TRV (expired).pdf",
+            "document_type": "trv",
+            "person_name": "Prahlad Ranjit",
+            "visa_type": "temporary resident visa",
+            "expiry_date": "2025-09-03",
+            "conditions": [],
+            "field_evidence": {
+                "document_type": {"confidence": "high"},
+                "person_name": {"confidence": "high"},
+                "expiry_date": {"confidence": "medium"},
+            },
+            "deadlines": [
+                {
+                    "action": "Temporary resident visa expires",
+                    "date": "2025-09-03",
+                    "urgency": "urgent",
+                    "days_remaining": -193,
+                    "source_document": "TRV (expired).pdf",
+                }
+            ],
+        },
+    ]
+
+    profile = build_profile_fallback(documents)
+
+    assert profile["permit_type"] == "study permit"
+    assert profile["expiry_date"] == "2026-09-30"
+    assert any("trv appears expired" in risk.lower() for risk in profile["risks"])
+    assert any(action["action_id"] == "trv_renewal" for action in profile["required_actions"])
+
+
+def test_trv_required_action_does_not_get_implied_status():
+    from shared.session_enrichment import build_session_enrichment
+
+    knowledge_base = json.loads((BACKEND_DIR / "knowledge" / "ircc_knowledge_base.json").read_text())
+    documents = []
+    profile = {
+        "current_status": "TRV renewal needed.",
+        "permit_type": "study permit",
+        "authorized_activities": [],
+        "expiry_date": "2026-09-30",
+        "days_until_expiry": 199,
+        "urgency_level": "normal",
+        "all_deadlines": [],
+        "required_actions": [
+            {
+                "action_id": "trv_renewal",
+                "title": "Renew temporary resident visa",
+                "urgency": "urgent",
+                "deadline": "2025-09-03",
+                "steps": [],
+            }
+        ],
+        "risks": [],
+    }
+
+    enriched = build_session_enrichment(documents, profile, knowledge_base)
+
+    assert enriched["profile"]["required_actions"][0]["implied_status"]["eligible"] is False
 
 
 def test_fallback_mode_without_llm_key(monkeypatch):

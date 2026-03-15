@@ -146,6 +146,10 @@ export interface QAResponse {
   answer: string;
 }
 
+export interface ChatTranslationResponse {
+  messages: string[];
+}
+
 export interface TranslateResponse {
   translated_status: string | null;
   translated_actions: RequiredAction[] | null;
@@ -173,4 +177,5 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  source_content?: string;
 }

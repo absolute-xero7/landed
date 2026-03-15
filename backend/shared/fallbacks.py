@@ -54,6 +54,113 @@ def _extract_first(patterns: list[str], text: str) -> str | None:
     return None
 
 
+def _parse_noisy_ddmmyyyy(value: str | None) -> str | None:
+    if not value:
+        return None
+
+    cleaned = value.upper()
+    cleaned = cleaned.replace("O", "0").replace("I", "1").replace("L", "1").replace("Z", "2").replace("S", "5").replace("B", "8")
+    cleaned = cleaned.replace("T", "").replace("A", "")
+    cleaned = re.sub(r"[^0-9/-]", "", cleaned)
+    if not cleaned:
+        return None
+
+    parts = [part for part in re.split(r"[/\-]", cleaned) if part]
+    if len(parts) == 2 and len(parts[1]) >= 4:
+        year = parts[1][-4:]
+        prefix_digits = re.sub(r"\D", "", parts[0])
+        if len(prefix_digits) >= 4:
+            day = prefix_digits[:2]
+            month = prefix_digits[-2:]
+            candidate = f"{day}/{month}/{year}"
+            try:
+                parsed = datetime.strptime(candidate, "%d/%m/%Y").date()
+                if 1990 <= parsed.year <= date.today().year + 5:
+                    return parsed.isoformat()
+            except ValueError:
+                pass
+
+    if len(parts) >= 3:
+        day = re.sub(r"\D", "", parts[0])[:2]
+        month = re.sub(r"\D", "", parts[1])[:2]
+        year = re.sub(r"\D", "", parts[2])[-4:]
+        if len(day) == 2 and len(month) == 2 and len(year) == 4:
+            candidate = f"{day}/{month}/{year}"
+            try:
+                parsed = datetime.strptime(candidate, "%d/%m/%Y").date()
+                if 1990 <= parsed.year <= date.today().year + 5:
+                    return parsed.isoformat()
+            except ValueError:
+                pass
+
+    digits = re.sub(r"\D", "", cleaned)
+    if len(digits) >= 8:
+        window = digits[-8:]
+        for candidate in (window, digits[:8]):
+            try:
+                parsed = datetime.strptime(candidate, "%d%m%Y").date()
+                if 1990 <= parsed.year <= date.today().year + 5:
+                    return parsed.isoformat()
+            except ValueError:
+                continue
+    return None
+
+
+def _extract_trv_ocr_fields(text: str) -> dict[str, str]:
+    upper_text = text.upper()
+    result: dict[str, str] = {}
+
+    lines = [line.strip() for line in upper_text.splitlines() if line.strip()]
+    for index, line in enumerate(lines):
+        folded = line.replace("~", "")
+        if "SURNAM" in folded or "GIVEN NAME" in folded or "PR" in folded:
+            for candidate in lines[index + 1 : index + 5]:
+                candidate = candidate.strip(" ,")
+                if re.fullmatch(r"[A-Z][A-Z' -]+,\s*[A-Z][A-Z' -]+", candidate) and "CAT" not in candidate and "MULTIPLE" not in candidate:
+                    family, given = [part.strip() for part in candidate.split(",", 1)]
+                    result["person_name"] = f"{given.title()} {family.title()}"
+                    break
+        if result.get("person_name"):
+            break
+
+    if not result.get("person_name"):
+        mrz_match = re.search(r"CAN([A-Z<]+)<<([A-Z<]+)", re.sub(r"[^A-Z<]", "", upper_text))
+        if mrz_match:
+            family = mrz_match.group(1).replace("<", " ").strip()
+            given = mrz_match.group(2).replace("<", " ").strip()
+            if family and given:
+                result["person_name"] = f"{given.title()} {family.title()}"
+
+    expiry_match = _extract_first(
+        [
+            r"(?:EXPIRY|EPIRY|LPJRY|PJRY|IPJRY)[^A-Z0-9]{0,8}([A-Z0-9/\-\s]{6,24})",
+            r"\bOA[0-9A-Z/\-]{8,16}\b",
+        ],
+        upper_text,
+    )
+    expiry_date = _parse_noisy_ddmmyyyy(expiry_match)
+    if expiry_date:
+        result["expiry_date"] = expiry_date
+
+    issue_match = _extract_first(
+        [
+            r"(?:ISSUED?|ISSU)[^A-Z0-9]{0,8}([A-Z0-9/\-\s]{6,24})",
+        ],
+        upper_text,
+    )
+    issue_date = _parse_noisy_ddmmyyyy(issue_match)
+    if issue_date:
+        result["issue_date"] = issue_date
+
+    uci_match = _extract_first([r"\b([0-9][0-9\s;:{}]{7,}[0-9])\b"], upper_text)
+    if uci_match:
+        digits = re.sub(r"\D", "", uci_match)
+        if len(digits) >= 8:
+            result["uci"] = digits[-10:]
+
+    return result
+
+
 def _collect_dates(text: str) -> list[str]:
     matches: list[str] = []
     patterns = [
@@ -332,6 +439,7 @@ def _authorized_activity_lines(document: dict | None) -> list[str]:
 
 def build_document_fallback(text: str, filename: str) -> dict:
     document_type = _document_type_from_text(text, filename)
+    trv_fields: dict[str, str] = {}
     issue_date = parse_loose_date(_extract_first([r"Issue Date:\s*([^\n]+)", r"Valid From[:\s]*([^\n]+)"], text))
     expiry_match = _extract_first(
         [
@@ -366,6 +474,15 @@ def build_document_fallback(text: str, filename: str) -> dict:
     occupation = _extract_first([r"Occupation[:\s]*([^\n]+)"], text)
     evidence: dict[str, dict[str, str]] = {}
 
+    if document_type == "trv":
+        trv_fields = _extract_trv_ocr_fields(text)
+        if trv_fields.get("person_name"):
+            person_name = trv_fields["person_name"]
+        if trv_fields.get("issue_date"):
+            issue_date = trv_fields["issue_date"]
+        if trv_fields.get("expiry_date"):
+            expiry_date = trv_fields["expiry_date"]
+
     if document_type != "other":
         evidence["document_type"] = _make_evidence(document_type, "medium", "filename_or_text_match", filename)
         if permit_type := _permit_type_for_document(document_type):
@@ -375,15 +492,20 @@ def build_document_fallback(text: str, filename: str) -> dict:
     if issuing_authority:
         evidence["issuing_authority"] = _make_evidence(issuing_authority, "medium", "issuer_hint", "IRCC")
     if person_name:
-        evidence["person_name"] = _make_evidence(person_name, "medium", "regex_match", person_name)
+        evidence["person_name"] = _make_evidence(person_name, "medium", "ocr_trv_match" if document_type == "trv" and trv_fields.get("person_name") else "regex_match", person_name)
     if dob:
         evidence["dob"] = _make_evidence(dob, "medium", "regex_match", "Date of Birth")
     if nationality:
         evidence["nationality"] = _make_evidence(nationality, "medium", "regex_match", nationality)
     if issue_date:
-        evidence["issue_date"] = _make_evidence(issue_date, "medium", "regex_match", "Issue Date")
+        evidence["issue_date"] = _make_evidence(issue_date, "medium", "ocr_trv_match" if document_type == "trv" and trv_fields.get("issue_date") else "regex_match", "Issue Date")
     if expiry_date:
-        evidence["expiry_date"] = _make_evidence(expiry_date, "medium", "regex_match", expiry_match)
+        evidence["expiry_date"] = _make_evidence(
+            expiry_date,
+            "medium",
+            "ocr_trv_match" if document_type == "trv" and trv_fields.get("expiry_date") else "regex_match",
+            expiry_match or trv_fields.get("expiry_date"),
+        )
     if employer:
         evidence["employer"] = _make_evidence(employer, "medium", "regex_match", employer)
     if occupation:
@@ -403,7 +525,10 @@ def build_document_fallback(text: str, filename: str) -> dict:
         "expiry_date": expiry_date,
         "conditions": conditions,
         "restrictions": [],
-        "reference_numbers": _collect_reference_numbers(text),
+        "reference_numbers": {
+            **_collect_reference_numbers(text),
+            **({"uci": trv_fields["uci"]} if document_type == "trv" and trv_fields.get("uci") else {}),
+        },
         "deadlines": _build_deadlines(text, filename, document_type, expiry_date),
         "raw_important_text": _important_lines(text),
         "field_evidence": evidence,
@@ -620,20 +745,25 @@ def build_profile_fallback(documents: list[dict]) -> dict:
             None,
         )
         if trv_doc and trv_doc.get("expiry_date"):
+            trv_expiry_date = date.fromisoformat(trv_doc["expiry_date"])
             required_actions.append(
                 {
                     "action_id": "trv_renewal",
                     "title": "Renew temporary resident visa",
-                    "urgency": _urgency_from_days((date.fromisoformat(trv_doc["expiry_date"]) - date.today()).days),
+                    "urgency": _urgency_from_days((trv_expiry_date - date.today()).days),
                     "deadline": trv_doc["expiry_date"],
                     "steps": [],
                 }
             )
+            if trv_expiry_date < date.today():
+                risks.append("Your uploaded TRV appears expired, so international travel and re-entry to Canada may not be possible until you obtain a new TRV.")
         if trv_doc and permit_doc and trv_doc.get("expiry_date") and permit_doc.get("expiry_date"):
             trv_expiry = date.fromisoformat(trv_doc["expiry_date"])
             permit_expiry = date.fromisoformat(permit_doc["expiry_date"])
             if trv_expiry < permit_expiry:
                 risks.append("Your TRV expires before your underlying permit, which can block re-entry to Canada.")
+        elif trv_doc and not trv_doc.get("expiry_date"):
+            risks.append("A TRV was uploaded, but its expiry date could not be verified from the document text.")
 
     if permit_type in {"study permit", "work permit"}:
         matching_doc = current_doc if current_doc and current_doc.get("permit_type") == permit_type and current_doc.get("expiry_date") else next(

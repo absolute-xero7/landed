@@ -14,15 +14,17 @@ const LANGUAGES = [
 interface LanguageSelectorProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export default function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
+export default function LanguageSelector({ value, onChange, disabled = false }: LanguageSelectorProps) {
   return (
     <label className="flex items-center gap-2 text-sm text-text-secondary">
       Language
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
         className="rounded-md border border-border bg-bg-surface px-2 py-1 text-text-primary focus:border-border-strong focus:outline-none"
       >
         {LANGUAGES.map((lang) => (
