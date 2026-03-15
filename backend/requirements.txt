@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+railtracks
+railtracks[cli]
+pymupdf
+pillow
+python-multipart
+sse-starlette
+pydantic
+httpx
+reportlab

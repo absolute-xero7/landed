@@ -1,0 +1,236 @@
+{
+  "forms": {
+    "study_permit": {
+      "form_number": "IMM 1294",
+      "fee": "$150 CAD",
+      "processing_time": "4-12 weeks (online), 8-16 weeks (paper)",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/study-permit.html",
+      "required_documents": [
+        "valid passport",
+        "letter of acceptance from DLI",
+        "proof of funds ($10,000+ for first year)",
+        "passport photos",
+        "study plan letter"
+      ],
+      "common_mistakes": [
+        "not proving sufficient funds",
+        "missing biometrics if required",
+        "applying less than 4 months before start date"
+      ]
+    },
+    "trv": {
+      "form_number": "IMM 5257",
+      "fee": "$100 CAD",
+      "processing_time": "2-8 weeks (online)",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html",
+      "required_documents": [
+        "valid passport",
+        "passport photo",
+        "proof of ties to home country",
+        "proof of funds",
+        "existing study/work permit if applicable"
+      ],
+      "common_mistakes": [
+        "applying without a valid underlying permit",
+        "not explaining purpose of travel",
+        "insufficient proof of funds"
+      ],
+      "biometrics": "Biometrics may be required based on nationality and last enrolment date."
+    },
+    "pgwp": {
+      "form_number": "IMM 5710",
+      "fee": "$255 CAD",
+      "processing_time": "up to 180 days (interim work authorization letter issued immediately on application)",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/about.html",
+      "required_documents": [
+        "final transcripts or graduation letter",
+        "passport",
+        "existing study permit"
+      ],
+      "eligibility": "Must apply within 180 days of receiving final marks or official graduation letter.",
+      "duration": "Matches length of study program, maximum 3 years",
+      "common_mistakes": [
+        "applying too late after graduation",
+        "not having attended an eligible DLI",
+        "applying before receiving final marks"
+      ]
+    },
+    "sin": {
+      "form_number": "N/A",
+      "fee": "Free",
+      "processing_time": "Same day (in person at Service Canada)",
+      "official_link": "https://www.canada.ca/en/employment-social-development/services/sin.html",
+      "required_documents": [
+        "study or work permit",
+        "passport"
+      ],
+      "notes": "Students and temporary workers receive a SIN beginning with 9. It expires when your permit expires. Update it when you get a new permit."
+    },
+    "ohip": {
+      "form_number": "N/A",
+      "fee": "Free after waiting period",
+      "processing_time": "3-month waiting period from establishing Ontario residency",
+      "official_link": "https://www.ontario.ca/page/apply-ohip-and-get-health-card",
+      "required_documents": [
+        "proof of Ontario address (utility bill or bank statement)",
+        "identity document (passport)",
+        "immigration status document (permit or visa)"
+      ],
+      "notes": "Apply at ServiceOntario. Some exemptions exist for shorter waiting period - check your permit type.",
+      "common_mistakes": [
+        "not applying immediately on arrival (waiting period starts from application, not from arrival)"
+      ]
+    },
+    "permit_extension": {
+      "form_number": "IMM 5709 (study) or IMM 5710 (work)",
+      "fee": "$150 (study) or $155 (work)",
+      "processing_time": "60-150 days",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/extend-study-permit.html",
+      "notes": "Apply at least 30 days before expiry to maintain implied status. With implied status, you can continue under the same conditions while IRCC processes."
+    },
+    "open_work_permit": {
+      "form_number": "IMM 5710",
+      "fee": "$255 CAD",
+      "processing_time": "4-16 weeks",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/permit/temporary/open-work-permit.html",
+      "required_documents": [
+        "passport",
+        "proof of spouse status in Canada",
+        "marriage certificate or proof of common-law relationship"
+      ],
+      "notes": "Common for spouses of international students and workers with eligible status."
+    },
+    "coop_work_permit": {
+      "form_number": "IMM 5710",
+      "fee": "Free",
+      "processing_time": "4-12 weeks",
+      "official_link": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/about.html",
+      "required_documents": [
+        "valid study permit",
+        "letter from school confirming mandatory co-op placement"
+      ],
+      "notes": "Required when work placement is mandatory component of studies."
+    },
+    "flagpole": {
+      "form_number": "N/A",
+      "fee": "Varies",
+      "processing_time": "Same day at border in some cases",
+      "official_link": "https://www.cbsa-asfc.gc.ca/travel-voyage/menu-eng.html",
+      "notes": "Flagpoling is leaving and re-entering Canada via land border to activate a permit or status update. Border processing policies vary."
+    },
+    "lmia": {
+      "form_number": "EMP5661 and employer forms",
+      "fee": "$1,000 employer processing fee",
+      "processing_time": "8-20 weeks depending on stream",
+      "official_link": "https://www.canada.ca/en/employment-social-development/services/foreign-workers.html",
+      "required_documents": [
+        "employer recruitment evidence",
+        "job offer details",
+        "wage and labor market documentation"
+      ],
+      "notes": "LMIA is typically employer-led and supports employer-specific work permit applications."
+    }
+  },
+  "definitions": {
+    "TRV": "Temporary Resident Visa - the stamp or sticker in your passport that allows you to enter Canada. Separate from study/work permits.",
+    "DLI": "Designated Learning Institution - a school approved by a Canadian province or territory to host international students.",
+    "PGWP": "Post-Graduation Work Permit - allows graduates of eligible Canadian schools to work in Canada after completing their studies.",
+    "eTA": "Electronic Travel Authorization - required instead of a TRV for visa-exempt nationals flying into Canada.",
+    "IRCC": "Immigration, Refugees and Citizenship Canada - the federal department that manages immigration, refugees, and citizenship.",
+    "flagpole": "Informal term for briefly leaving Canada (often to a US border crossing) and re-entering to receive a new entry stamp or activate a newly issued permit.",
+    "implied status": "If you apply to extend your permit before it expires, you may legally remain in Canada under the same conditions while IRCC processes your application.",
+    "LMIA": "Labour Market Impact Assessment - a document from Employment and Social Development Canada that an employer may need before hiring a temporary foreign worker.",
+    "open work permit": "A work permit that is not tied to a specific employer - the holder can work for almost any employer in Canada.",
+    "co-op work permit": "A work permit required for mandatory work placements (co-op terms) as part of a study program. Usually approved alongside the study permit.",
+    "SIN": "Social Insurance Number - a 9-digit number required to work in Canada and access government programs.",
+    "OHIP": "Ontario Health Insurance Plan - the provincial health insurance program for residents of Ontario.",
+    "PR": "Permanent Residence - the status of living in Canada permanently without being a citizen.",
+    "CRS": "Comprehensive Ranking System - the points-based system used by Express Entry to rank candidates for permanent residence.",
+    "NOC": "National Occupational Classification - Canada's system for classifying jobs and occupations, used in immigration applications.",
+    "biometrics": "Fingerprints and photo collection required for many temporary resident applications.",
+    "AOR": "Acknowledgement of Receipt - confirmation that IRCC has received your application.",
+    "GCKey": "Secure government login system used to access IRCC online services.",
+    "study permit": "A status document allowing international students to study in Canada under listed conditions.",
+    "work permit": "A status document allowing temporary work in Canada under listed conditions.",
+    "visitor record": "A document extending authorized stay in Canada without granting re-entry authorization.",
+    "primary applicant": "The person who submits the principal immigration application for a family or group.",
+    "dependent": "A spouse or child included under the primary applicant's file where applicable."
+  },
+  "scenarios": {
+    "study_permit_expiry_soon": {
+      "description": "Study permit expires within 90 days",
+      "action": "extend_study_permit",
+      "lead_time_weeks": 12,
+      "warning": "Apply immediately - processing can take 60-150 days"
+    },
+    "trv_expiry_with_valid_permit": {
+      "description": "TRV expires but study/work permit is still valid",
+      "action": "trv_renewal",
+      "lead_time_weeks": 8,
+      "warning": "You cannot re-enter Canada without a valid TRV even if your permit is valid"
+    },
+    "graduation_approaching": {
+      "description": "Within 180 days of graduation",
+      "action": "apply_pgwp",
+      "lead_time_weeks": 2,
+      "warning": "You must apply within 180 days of receiving final marks - do not delay"
+    }
+  },
+  "processing_times": {
+    "trv": {
+      "weeks_min": 2,
+      "weeks_max": 8,
+      "recommended_buffer_weeks": 10
+    },
+    "study_permit": {
+      "weeks_min": 4,
+      "weeks_max": 12,
+      "recommended_buffer_weeks": 14
+    },
+    "pgwp": {
+      "weeks_min": 8,
+      "weeks_max": 26,
+      "recommended_buffer_weeks": 28
+    },
+    "work_permit": {
+      "weeks_min": 4,
+      "weeks_max": 16,
+      "recommended_buffer_weeks": 18
+    },
+    "permit_extension": {
+      "weeks_min": 8,
+      "weeks_max": 20,
+      "recommended_buffer_weeks": 22
+    }
+  },
+  "consequences": {
+    "trv": {
+      "missed": "Your TRV expires but your study/work permit remains valid. You may stay in Canada but cannot re-enter if you travel internationally until you obtain a new TRV.",
+      "action": "Do not travel outside Canada until you have a new TRV."
+    },
+    "study_permit": {
+      "missed": "You lose legal status in Canada and are required to leave or restore status immediately. Overstaying without implied status is a serious immigration violation.",
+      "action": "Contact IRCC immediately and do not leave Canada voluntarily without guidance."
+    },
+    "pgwp": {
+      "missed": "You permanently lose eligibility to apply for the PGWP. The 180-day window cannot be extended. You would need to find an alternative pathway to work in Canada.",
+      "action": "Apply immediately — even a late application may be rejected."
+    },
+    "work_permit": {
+      "missed": "You are no longer authorized to work. Continuing to work after expiry is a violation of your immigration conditions and may affect future applications.",
+      "action": "Cease work immediately and apply for renewal or a new permit."
+    },
+    "permit_extension": {
+      "missed": "If you did not apply before expiry, you have no implied status and have lost legal authorization to remain in Canada.",
+      "action": "Contact an immigration lawyer immediately."
+    }
+  },
+  "work_authorization": {
+    "study_permit": {
+      "off_campus_hours_per_week": 24,
+      "effective_date": "2024-11-08",
+      "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work.html",
+      "policy_note": "As of November 8, 2024, eligible study permit holders may work up to 24 hours per week off campus during regular academic sessions. If a valid permit still says 20 hours, IRCC says the 24-hour rule still applies when the student is otherwise eligible."
+    }
+  }
+}

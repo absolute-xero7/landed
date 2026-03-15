@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Project docs / local planning
+LANDED_BUILDPLAN.md
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+backend/.env
+frontend/.env.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/*.db
+
+# Node / Next.js
+node_modules/
+.next/
+dist/
+frontend/node_modules/
+frontend/.next/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Railtracks
+.railtracks/
+backend/.railtracks/

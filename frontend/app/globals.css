@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #fafaf9;
+  --bg-surface: #ffffff;
+  --bg-raised: #f4f4f2;
+
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
+
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-mono: #3f3f46;
+
+  --status-safe: #16a34a;
+  --status-warn: #d97706;
+  --status-urgent: #dc2626;
+  --status-info: #2563eb;
+
+  --canada-red: #cc0000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
