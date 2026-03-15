@@ -12,7 +12,7 @@ export default function WorkAuthCard({ workAuthorization }: WorkAuthCardProps) {
   }
 
   return (
-    <section className="mt-4 rounded-xl border border-border bg-bg-raised p-3">
+    <section className="rounded-[20px] border border-border bg-bg-raised p-4">
       <h3 className="font-heading text-lg text-text-primary">Work Authorization</h3>
       <p className="mt-2 text-sm text-text-secondary">{workAuthorization.plain_english}</p>
       {workAuthorization.policy_note && (

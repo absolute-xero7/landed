@@ -98,14 +98,51 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-4 py-10">
-      <header className="mb-8 text-center">
-        <h1 className="font-heading text-5xl text-canada-red">Landed</h1>
-        <p className="mt-2 text-text-secondary">Your immigration documents, explained.</p>
-        <p className="mt-2 text-sm text-text-secondary">Private · Multilingual · No account required</p>
-      </header>
+    <main className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center overflow-hidden px-4 py-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(204,0,0,0.08),transparent_50%)]" />
+      <div className="grid items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <header className="max-w-2xl">
+          <p className="inline-flex rounded-full border border-[rgba(204,0,0,0.14)] bg-white/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-canada-red shadow-[0_10px_30px_rgba(60,27,5,0.06)] backdrop-blur">
+            Canadian immigration assistant
+          </p>
+          <h1 className="mt-4 max-w-[11ch] font-heading text-5xl leading-[0.94] text-canada-red sm:text-6xl">
+            Landed
+          </h1>
+          <p className="mt-4 max-w-xl text-lg leading-7 text-text-primary sm:text-[1.15rem]">
+            Understand your permits, visas, and deadlines in one place without reading every IRCC document line by line.
+          </p>
+          <p className="mt-3 max-w-xl text-[15px] leading-7 text-text-secondary">
+            Upload your documents, let Landed cross-reference what is still active, and get a clear view of status, work rules, travel risk, and next steps.
+          </p>
 
-      <section className="mx-auto w-full max-w-[680px]">
+          <div className="mt-5 flex flex-wrap gap-2.5 text-sm text-text-secondary">
+            {["Private", "Multilingual", "No account required", "Grounded in uploaded documents"].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-border bg-white/70 px-3 py-1 shadow-[0_8px_20px_rgba(60,27,5,0.04)] backdrop-blur"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-[rgba(255,252,248,0.8)] p-4 shadow-[0_18px_50px_rgba(60,27,5,0.06)] backdrop-blur">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-text-secondary">Reads</p>
+              <p className="mt-2 text-lg text-text-primary">Permits, TRVs, passports, and IRCC letters</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-[rgba(255,252,248,0.8)] p-4 shadow-[0_18px_50px_rgba(60,27,5,0.06)] backdrop-blur">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-text-secondary">Finds</p>
+              <p className="mt-2 text-lg text-text-primary">Deadlines, travel risk, implied status, and work limits</p>
+            </div>
+            <div className="rounded-2xl border border-border bg-[rgba(255,252,248,0.8)] p-4 shadow-[0_18px_50px_rgba(60,27,5,0.06)] backdrop-blur">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-text-secondary">Answers</p>
+              <p className="mt-2 text-lg text-text-primary">Questions in grounded plain language with sources</p>
+            </div>
+          </div>
+        </header>
+
+        <section className="mx-auto w-full max-w-[720px]">
         <AnimatePresence mode="wait" initial={false}>
           {state === "idle" ? (
             <motion.div key="upload" initial={false} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -123,7 +160,8 @@ export default function HomePage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

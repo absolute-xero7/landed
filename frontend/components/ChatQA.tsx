@@ -142,22 +142,32 @@ export default function ChatQA({ sessionId, language, onLanguageChange }: ChatQA
   };
 
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-border bg-bg-surface p-5">
+    <section className="flex flex-col rounded-[24px] border border-border bg-bg-surface p-4 shadow-[0_18px_40px_rgba(60,27,5,0.06)]">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-heading text-xl text-text-primary">Question & Answer</h3>
+        <h3 className="font-heading text-[2rem] text-text-primary">Question & Answer</h3>
         <LanguageSelector value={language} onChange={handleLanguageChange} disabled={loading || activeStream || translating} />
       </div>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg border border-border bg-white p-3">
+      <div ref={scrollRef} className="h-[360px] space-y-4 overflow-y-auto rounded-[20px] border border-border bg-white p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
         {messages.length === 0 && (
-          <p className="text-sm text-text-secondary">Ask a question about this person's current immigration situation. Changing the selector retranslates the full conversation.</p>
+          <div className="rounded-2xl border border-border bg-[rgba(241,233,220,0.7)] px-4 py-3 text-sm leading-6 text-text-secondary">
+            Ask about status, deadlines, work rules, travel, or missing documents. Changing the selector retranslates the full conversation.
+          </div>
         )}
 
         {messages.map((message, index) => (
-          <div key={`${message.role}-${index}`} className={message.role === "user" ? "text-right" : "text-left"}>
-            <p className="text-xs uppercase tracking-wide text-text-secondary">{message.role}</p>
-            <p className="text-sm text-text-primary">{message.content || (activeStream && message.role === "assistant" ? "|" : "")}</p>
-            <p className="font-mono text-xs text-text-secondary">{message.timestamp}</p>
+          <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[88%] rounded-[22px] border px-4 py-3 shadow-[0_12px_24px_rgba(60,27,5,0.04)] ${
+                message.role === "user"
+                  ? "border-[rgba(204,0,0,0.14)] bg-[linear-gradient(135deg,rgba(204,0,0,0.08),rgba(255,255,255,0.92))] text-right"
+                  : "border-border bg-bg-surface"
+              }`}
+            >
+              <p className="text-[11px] uppercase tracking-[0.2em] text-text-secondary">{message.role}</p>
+              <p className="mt-2 text-sm leading-7 text-text-primary">{message.content || (activeStream && message.role === "assistant" ? "|" : "")}</p>
+              <p className="mt-2 font-mono text-xs text-text-secondary">{message.timestamp}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -165,17 +175,17 @@ export default function ChatQA({ sessionId, language, onLanguageChange }: ChatQA
       {translating && <p className="mt-2 text-sm text-text-secondary">Translating conversation...</p>}
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
 
-      <form onSubmit={onSubmit} className="mt-3 flex gap-2">
+      <form onSubmit={onSubmit} className="mt-3.5 flex gap-2">
         <input
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           placeholder="Can this person work part-time while studying?"
-          className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-primary focus:border-border-strong focus:outline-none"
+          className="flex-1 rounded-2xl border border-border bg-white/88 px-4 py-3 text-sm text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus:border-border-strong focus:outline-none"
         />
         <button
           type="submit"
           disabled={!canSend}
-          className="rounded-lg bg-text-primary px-4 py-2 text-sm text-bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-2xl bg-[linear-gradient(135deg,#2b221b,#16110d)] px-5 py-3 text-sm text-bg-surface shadow-[0_18px_34px_rgba(22,17,13,0.18)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Send
         </button>

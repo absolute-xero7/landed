@@ -1,14 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { AlertTriangle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 import ActionPlan from "@/components/ActionPlan";
-import ChatQA from "@/components/ChatQA";
-import CompletenessWarning from "@/components/CompletenessWarning";
+import ChatLauncher from "@/components/ChatLauncher";
 import DeadlineTimeline from "@/components/DeadlineTimeline";
-import ImpliedStatusCard from "@/components/ImpliedStatusCard";
 import SessionUploadPanel from "@/components/SessionUploadPanel";
 import SessionDiffBanner from "@/components/SessionDiffBanner";
 import StatusDashboard from "@/components/StatusDashboard";
@@ -57,6 +56,7 @@ function DashboardContent() {
 
   const profile: ImmigrationProfile | null = data?.profile ?? null;
   const documents = data?.documents ?? [];
+  const missingHeaderDocs = data?.document_completeness?.missing ?? [];
 
   const actions = useMemo(() => {
     if (!profile) {
@@ -82,52 +82,69 @@ function DashboardContent() {
       initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="mx-auto flex h-screen max-h-screen w-full max-w-[1440px] flex-col px-4 py-4"
+      className="mx-auto flex h-screen max-h-screen w-full max-w-[1480px] flex-col overflow-hidden px-4 py-3"
     >
-      <header className="mb-3 flex items-center justify-between rounded-xl border border-border bg-bg-surface px-4 py-3">
-        <div>
-          <h1 className="font-heading text-3xl text-canada-red">Landed</h1>
-          <p className="text-sm text-text-secondary">Canadian immigration assistant</p>
-          <p className="font-mono text-xs text-text-secondary">Session {sessionId}</p>
+      <header className="mb-2.5 shrink-0 rounded-[24px] border border-border bg-bg-surface px-4 py-3 shadow-[0_16px_36px_rgba(60,27,5,0.06)]">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-text-secondary">Canadian immigration assistant</p>
+            <h1 className="mt-1 font-heading text-[2.2rem] leading-none text-canada-red">Landed</h1>
+            <p className="mt-1 text-sm text-text-secondary">Status, deadlines, and next steps in one place.</p>
+            <p className="mt-1.5 font-mono text-xs text-text-secondary">Session {sessionId}</p>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <SessionUploadPanel
+              sessionId={sessionId}
+              onComplete={(diff) => {
+                setSessionDiff(diff);
+                setRefreshKey((current) => current + 1);
+              }}
+            />
+            {missingHeaderDocs.length > 0 && (
+              <div className="flex flex-wrap items-center justify-end gap-1.5 pr-6 text-right">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--status-warn)]" />
+                <span className="text-[11px] text-text-secondary">Upload:</span>
+                {missingHeaderDocs.map((item) => (
+                  <span
+                    key={item.type}
+                    title={item.reason}
+                    className="rounded-full border border-amber-200 bg-amber-50/85 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-[var(--status-warn)]"
+                  >
+                    {item.type}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <SessionUploadPanel
-          sessionId={sessionId}
-          onComplete={(diff) => {
-            setSessionDiff(diff);
-            setRefreshKey((current) => current + 1);
-          }}
-        />
       </header>
 
       <SessionDiffBanner diff={sessionDiff} onDismiss={() => setSessionDiff(null)} />
-      <CompletenessWarning completeness={data?.document_completeness} sessionId={sessionId} />
+      <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.0 }} className="shrink-0">
+        <StatusDashboard
+          profile={profile}
+          documents={documents}
+          workAuthorization={data?.work_authorization}
+          completeness={data?.document_completeness}
+          actions={actions}
+        />
+      </motion.div>
 
-      <section className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[55fr_45fr]">
-        <div className="grid min-h-0 gap-3" style={{ gridTemplateRows: "35vh 45vh" }}>
-          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.0 }} className="min-h-0 overflow-y-auto pr-1">
-            <div className="flex min-h-full flex-col gap-3">
-              <StatusDashboard
-                profile={profile}
-                documents={documents}
-                workAuthorization={data?.work_authorization}
-              />
-              <ImpliedStatusCard actions={actions} />
-            </div>
-          </motion.div>
-          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="min-h-0">
-            <ChatQA sessionId={sessionId} language={language} onLanguageChange={setLanguage} />
-          </motion.div>
-        </div>
-
-        <div className="grid min-h-0 gap-3" style={{ gridTemplateRows: "35vh 45vh" }}>
-          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="min-h-0">
+      <section className="mt-2.5 grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className="min-h-0">
+          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.05 }} className="h-full min-h-0">
             <DeadlineTimeline deadlines={profile.all_deadlines} />
           </motion.div>
-          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="min-h-0">
+        </div>
+        <div className="min-h-0">
+          <motion.div initial={false} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="h-full min-h-0">
             <ActionPlan actions={actions} />
           </motion.div>
         </div>
       </section>
+
+      <ChatLauncher sessionId={sessionId} language={language} onLanguageChange={setLanguage} />
     </motion.main>
   );
 }

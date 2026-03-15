@@ -29,7 +29,7 @@ export default function DocumentCard({ document }: DocumentCardProps) {
     ) : null;
 
   return (
-    <article className="rounded-xl border border-border bg-bg-surface p-3">
+    <article className="rounded-[24px] border border-border bg-bg-surface p-3 shadow-[0_12px_30px_rgba(60,27,5,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium text-text-primary">{document.filename}</p>

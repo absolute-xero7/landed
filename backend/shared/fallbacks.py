@@ -842,10 +842,7 @@ def build_profile_fallback(documents: list[dict]) -> dict:
     subject = reliable_identity or "This person"
     if permit_type == "study permit":
         if current_expiry:
-            current_status = (
-                f"{subject}'s uploaded study permit shows an expiry date of {current_expiry}. "
-                "This summary only reflects the documents uploaded here."
-            )
+            current_status = f"{subject}'s uploaded study permit shows an expiry date of {current_expiry}."
         else:
             current_status = "A study permit appears in the uploaded documents, but the key status dates could not be verified."
         if "trv" in document_types:

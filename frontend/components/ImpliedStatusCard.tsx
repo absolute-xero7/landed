@@ -14,7 +14,7 @@ export default function ImpliedStatusCard({ actions }: ImpliedStatusCardProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-bg-surface p-5">
+    <section className="rounded-[28px] border border-border bg-bg-surface p-5 shadow-[0_18px_36px_rgba(60,27,5,0.06)]">
       <h3 className="font-heading text-xl text-text-primary">Implied Status</h3>
       <p className="mt-2 text-sm text-text-secondary">{implied.explanation}</p>
       {implied.warning && (

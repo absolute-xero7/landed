@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --bg-base: #fafaf9;
-  --bg-surface: #ffffff;
-  --bg-raised: #f4f4f2;
+  --bg-base: #f6f0e6;
+  --bg-surface: rgba(255, 252, 248, 0.92);
+  --bg-raised: #f1e9dc;
 
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.14);
+  --border: rgba(82, 55, 34, 0.12);
+  --border-strong: rgba(82, 55, 34, 0.2);
 
-  --text-primary: #18181b;
-  --text-secondary: #71717a;
-  --text-mono: #3f3f46;
+  --text-primary: #21160f;
+  --text-secondary: #716152;
+  --text-mono: #5a4a3f;
 
-  --status-safe: #16a34a;
-  --status-warn: #d97706;
-  --status-urgent: #dc2626;
-  --status-info: #2563eb;
+  --status-safe: #1f8a56;
+  --status-warn: #c56a13;
+  --status-urgent: #c9372c;
+  --status-info: #2d5db3;
 
   --canada-red: #cc0000;
 }
@@ -33,6 +33,20 @@ body {
   min-height: 100%;
 }
 
+html {
+  background:
+    radial-gradient(circle at top left, rgba(204, 0, 0, 0.07), transparent 22rem),
+    radial-gradient(circle at top right, rgba(212, 164, 89, 0.16), transparent 24rem),
+    linear-gradient(180deg, #fbf7f1 0%, #f4ede1 100%);
+}
+
+body {
+  background: transparent;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
 button,
 input,
 select,
@@ -42,4 +56,24 @@ textarea {
 
 a {
   color: inherit;
+}
+
+::selection {
+  background: rgba(204, 0, 0, 0.12);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(82, 55, 34, 0.18);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }

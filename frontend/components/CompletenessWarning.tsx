@@ -24,7 +24,7 @@ export default function CompletenessWarning({ completeness, sessionId }: Complet
   }
 
   return (
-    <section className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+    <section className="rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-[0_14px_30px_rgba(60,27,5,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium">For a complete analysis, consider uploading:</p>

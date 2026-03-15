@@ -1,109 +1,50 @@
 # Landed
 
-Landed is a local-first immigration document assistant for Canadian temporary residents. It ingests permits, visas, passports, and IRCC scans, extracts structured facts from noisy documents, cross-references them across the full upload set, and turns that into deadlines, risks, action items, and grounded Q&A.
+**Your immigration documents, finally explained.**
 
-## Repository
+Landed is a local-first immigration document assistant for Canadian temporary residents. Upload your permits, visas, passports, and IRCC letters — Landed reads them together, surfaces your deadlines, and tells you exactly what to do next. In any language.
 
-`https://github.com/absolute-xero7/landed`
+**GitHub:** `https://github.com/absolute-xero7/landed`
+
+## Demo
+
+![Landed Dashboard](landed.png)
+
+[▶ Watch the demo](https://youtu.be/-t-ufUA2AhQ)
+
+---
 
 ## Inspiration
 
-In August 2025, my Temporary Resident Visa expired while I was visiting India. I missed the start of my Winter 2026 semester at the University of Toronto. For three weeks I wrote letters to IRCC officers, university officials, and my MP trying to resolve a situation that started with one line in one document I had not understood.
+In August 2025, my Temporary Resident Visa expired while I was visiting India. I missed the start of my Winter 2026 semester at the University of Toronto. For three weeks I wrote letters to IRCC officers, university officials, and my MP — trying to resolve a situation that started with one line in one document I had not understood.
 
-The frustrating part was not the bureaucracy itself — it was that the information I needed existed. It was printed on my documents. I just did not know how to read them together, what the deadlines meant, or what would happen if I missed them. A licensed immigration consultant would have caught it in minutes. Most people cannot afford one.
+The frustrating part was not the bureaucracy itself. It was that the information I needed existed. It was printed on my documents. I just did not know how to read them together, what the deadlines meant, or what would happen if I missed them. A licensed immigration consultant would have caught it in minutes. Most people cannot afford one.
 
 Landed was built so that never happens to someone else. It reads your documents the way a consultant would — across all of them at once — and tells you exactly what your situation is, what you need to do, and what happens if you don't.
 
-## Product Summary
+---
 
-Landed lets a user upload immigration documents into a single session and then:
-- parses both native PDFs and low-quality scanned documents
-- extracts structured facts like names, issue dates, expiry dates, document types, reference numbers, and conditions
-- cross-references older and newer documents to determine the most current status
-- separates stay authorization, work authorization, and travel authorization
-- surfaces deadlines, processing windows, consequences, implied-status guidance, and missing-document warnings
-- answers questions in grounded plain English with explicit source labels
+## What it does
 
-The key product value is that Landed does not treat each document in isolation. It reasons across the uploaded set, so an expired work permit does not override a newer valid study permit, and an expired TRV becomes a travel warning rather than a false claim that the user must leave Canada.
+Landed does not treat each document in isolation. It reasons across the full uploaded set. An expired work permit does not override a newer valid study permit. An expired TRV becomes a travel warning rather than a false instruction to leave Canada. A deadline buried on page 2 of a formal IRCC letter gets surfaced automatically.
 
-## AI Use
+The output is practical:
 
-More than 70% of the code was AI-assisted during development: `Yes`
+- Current immigration status in plain English
+- Every deadline from every document in one unified timeline
+- Processing time windows — not just when your permit expires, but when to apply today to be safe
+- Consequences for missing each deadline
+- Implied status guidance
+- Work authorization details extracted from permit conditions
+- Missing document warnings
+- Grounded Q&A that cites the specific document behind every answer
+- All of the above in any of 8 languages
 
-The application itself also uses AI at runtime for OCR-assisted extraction, multilingual translation, and fallback Q&A when deterministic extraction is insufficient. When AI output is uncertain, the app falls back to deterministic parsing and field-level evidence instead of silently trusting hallucinated values.
-
-## Technology Stack
-
-### Languages
-- Python
-- TypeScript
-
-### Frameworks and Libraries
-- FastAPI
-- Pydantic
-- Next.js 14
-- React
-- Tailwind CSS
-- Framer Motion
-- Zustand
-- react-dropzone
-- sse-starlette
-
-### Platforms
-- Local-first runtime
-- OpenAI-compatible endpoint for GPT-OSS extraction and translation when configured
-
-### Tools
-- Railtracks for flow orchestration and tracing (RailtracksPM2)
-- PyMuPDF for PDF parsing and rasterization
-- local macOS Vision OCR for scanned documents
-- reportlab for demo document generation
-
-## Current Feature Set
-
-### Document ingestion and extraction
-- Uploads `PDF`, `PNG`, `JPG`, and `JPEG` documents
-- Supports multi-document sessions with up to 10 files per upload
-- Accepts additional uploads after the first submission and reprocesses the same session with the combined document set
-- Extracts data from native-text PDFs, scanned PDFs rendered to images, and image uploads
-- Uses deterministic parsing, regex fallback, local macOS Vision OCR, and GPT-OSS structured extraction when `OPENAI_API_KEY` is configured
-- Includes deterministic IRCC permit parsing and OCR-tolerant TRV extraction
-- Stores per-field evidence, confidence, and low-confidence flags
-
-### Cross-document reasoning
-- Builds a cross-document immigration profile from all uploaded files
-- Selects the active status document when older permits are superseded
-- Separates stay status, work authorization, and travel/re-entry authorization
-- Detects expired TRVs independently from permit validity
-- Adds processing windows, consequence text, implied-status guidance, and completeness warnings
-
-### Q&A and multilingual support
-- Answers grounded questions against the uploaded session
-- Uses deterministic answer branches for status, expiry, work rules, travel, implied status, missed-deadline consequences, and missing documents
-- Sanitizes fallback model answers to remove markdown junk and OCR leakage
-- Supports multilingual answers for new chat responses
-
-### Visualizer and debugging
-- Runs the upload pipeline through Railtracks
-- Exposes the Railtracks visualizer for trace inspection
-- Includes a standalone OCR/parser debug script for single-document inspection
-
-## Implemented UI Surfaces
-
-- Landing page upload zone
-- Processing stream with live parse/reasoning/planning updates
-- Session dashboard
-- Status summary card
-- Deadline timeline
-- Action plan accordion
-- Document evidence cards
-- Grounded Q&A chat
-- Language selector
-- In-session “Add documents” uploader
+---
 
 ## Architecture
 
-```text
+```
 +------------------------ Frontend (Next.js 14) ------------------------+
 | Upload | Processing Stream | Dashboard | Documents | QA | Add Docs   |
 +--------------------------------+--------------------------------------+
@@ -111,15 +52,34 @@ The application itself also uses AI at runtime for OCR-assisted extraction, mult
                            REST + SSE
                                  |
 +---------------- Backend (FastAPI + Railtracks Flow) ------------------+
-| parse_document x N -> synthesize_status -> generate_action_plan       |
+| parse_document × N -> synthesize_status -> generate_action_plan       |
 |                               |                                       |
 |                 deterministic parser + OCR + GPT-OSS                  |
 +--------------------------------+--------------------------------------+
                                  |
-                        Railtracks Visualizer
+                        Railtracks Visualizer (:3030)
 ```
 
-Flow: `parse_document × N -> synthesize_status -> generate_action_plan`
+The upload pipeline runs as a Railtracks `rt.Flow`. Each step is a `@rt.function_node`:
+
+1. `parse_document × N` — runs once per uploaded file in sequence
+2. `synthesize_status` — cross-document reasoning across all parsed results
+3. `generate_action_plan` — enriches required actions with IRCC knowledge base data
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, TypeScript, Tailwind CSS, Framer Motion, Zustand, react-dropzone |
+| Backend | FastAPI, Pydantic, sse-starlette |
+| Flow Orchestration | Railtracks |
+| LLM | GPT-OSS 120B via OpenAI-compatible HuggingFace endpoint |
+| OCR / Parsing | PyMuPDF, macOS Vision OCR, deterministic IRCC parsers |
+| Demo generation | reportlab |
+
+---
 
 ## Quick Start
 
@@ -131,8 +91,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# set OPENAI_API_KEY if you want GPT-OSS responses
-# leave it blank to use deterministic fallback mode
+# Set OPENAI_API_KEY for GPT-OSS extraction and translation
+# Leave blank to use deterministic fallback mode
 .venv/bin/python demo/generate_demo_docs.py
 .venv/bin/uvicorn main:app --reload --port 8000
 ```
@@ -146,6 +106,8 @@ cd backend
 .venv/bin/railtracks viz
 ```
 
+Open `http://localhost:3030` to see the pipeline trace for every upload run.
+
 ### 3. Frontend
 
 ```bash
@@ -157,94 +119,112 @@ npm run dev
 
 ### 4. One-command startup
 
-After backend dependencies and frontend `npm install` are done:
+After backend dependencies and frontend `npm install` are complete:
 
 ```bash
 chmod +x start.sh
 ./start.sh
 ```
 
-This starts:
+Starts:
 - App on `http://localhost:3000`
 - API on `http://localhost:8000`
 - Railtracks visualizer on `http://localhost:3030`
 
-## Demo Flow
+---
 
-Recommended demo order:
-1. Upload the demo document set from [backend/demo](backend/demo)
-2. Watch the processing stream detect document types and deadlines
-3. Confirm the dashboard picks the active study permit as the current status
-4. Confirm the expired TRV appears as a travel/re-entry warning, not a false leave-Canada status
-5. Ask grounded questions such as:
+## Demo
+
+### Recommended demo flow
+
+1. Run `backend/demo/generate_demo_docs.py` to generate sample documents
+2. Upload the demo set — a study permit, TRV letter, IRCC correspondence, and work permit
+3. Watch the processing stream extract document types and surface the deadline buried in the IRCC letter
+4. Confirm the dashboard shows the active study permit as the current status
+5. Confirm the expired TRV appears as a travel warning, not a false leave-Canada instruction
+6. Ask grounded questions:
    - `Can I work while studying?`
    - `Can I travel and come back to Canada?`
    - `What documents are missing?`
+7. Open `localhost:3030` to show the Railtracks pipeline trace
 
-## Demo Documents
+### Demo documents
 
-Current demo documents in [backend/demo](backend/demo):
-- [Passport_compressed.pdf](backend/demo/Passport.pdf)
-- [Study Permit_compressed.pdf](backend/demo/Study%20Permit.pdf)
-- [TRV.pdf](backend/demo/TRV.pdf)
-- [Work Permit_compressed.pdf](backend/demo/Work%20Permit.pdf)
+Located in `backend/demo/`:
+- `Passport.pdf`
+- `Study Permit.pdf`
+- `TRV.pdf`
+- `Work Permit.pdf`
 
-Generate or refresh the standard synthetic samples with:
+Regenerate with:
 
 ```bash
 cd backend
 .venv/bin/python demo/generate_demo_docs.py
 ```
 
+---
+
 ## Environment Variables
 
 ### backend/.env
 
-- `OPENAI_API_KEY`
-  - Optional for local demo mode
-  - Required for GPT-OSS extraction, translation, and non-fallback Q&A
-- `ALLOWED_ORIGINS`
-  - Optional
-  - Defaults to `http://localhost:3000`
-- `MAX_FILE_SIZE_MB`
-  - Optional
-  - Defaults to `10`
-- `MAX_FILES_PER_UPLOAD`
-  - Optional
-  - Defaults to `10`
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Optional | — | Required for GPT-OSS extraction, translation, and Q&A. Leave blank for deterministic fallback mode. |
+| `ALLOWED_ORIGINS` | Optional | `http://localhost:3000` | CORS allowed origins |
+| `MAX_FILE_SIZE_MB` | Optional | `10` | Max file size per upload |
+| `MAX_FILES_PER_UPLOAD` | Optional | `10` | Max files per session |
 
 ### frontend/.env.local
 
-- `NEXT_PUBLIC_API_BASE_URL`
-  - Defaults to `http://localhost:8000`
+| Variable | Default | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:8000` | Backend API base URL |
+
+---
 
 ## Local Demo Mode
 
-If `OPENAI_API_KEY` is not configured, Landed still runs end to end using deterministic parsing, local OCR paths, fallback reasoning, and fallback Q&A. This is sufficient for local development, tests, and demos, but GPT-backed extraction and translation will be limited.
+If `OPENAI_API_KEY` is not set, Landed runs end to end using deterministic parsing, local OCR, and fallback Q&A. This is sufficient for local development and demos. GPT-backed extraction, translation, and non-deterministic Q&A require a key.
+
+---
 
 ## Debugging Tools
 
-Standalone OCR/parser test:
+Test OCR and parsing on a single document:
 
 ```bash
 cd backend
-.venv/bin/python utils/test_ocr_gpt.py "demo/TRV (expired).pdf"
+.venv/bin/python utils/test_ocr_gpt.py "demo/TRV.pdf"
 ```
 
 OCR-only mode:
 
 ```bash
-cd backend
-.venv/bin/python utils/test_ocr_gpt.py "demo/TRV (expired).pdf" --ocr-only
+.venv/bin/python utils/test_ocr_gpt.py "demo/TRV.pdf" --ocr-only
 ```
 
-## Privacy and Runtime Model
+---
 
-- Uploaded files are processed in memory
-- Sessions are stored in memory only and cleaned up after 2 hours
-- No account system is required
-- Designed for local/demo use rather than durable storage
+## Privacy
 
-## Known Local Caveat
+- Uploaded files are processed in memory only
+- Sessions are stored in memory and cleaned up after 2 hours
+- No account system required
+- No files written to disk
 
-`npm run build` can fail in restricted-network environments because [frontend/app/layout.tsx](frontend/app/layout.tsx) pulls Google Fonts at build time. `npm run dev` works for local development.
+---
+
+## Known Caveat
+
+`npm run build` can fail in restricted-network environments because `frontend/app/layout.tsx` pulls Google Fonts at build time. `npm run dev` works for all local and demo use.
+
+---
+
+## Hackathon Tracks
+
+- Google Best AI for Community Impact
+- Bitdeer Beyond the Prototype: Best Production-Ready AI Tool
+- Top 2 Teams (Overall)
+- Railtracks Open-Source Showcase — RailtracksPM2
